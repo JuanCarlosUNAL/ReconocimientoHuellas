@@ -174,15 +174,14 @@ void Filtros::contorno(cv::Mat& in, cv::Mat& out) {
 }
 
 void Filtros::recorte(cv::Mat& in, cv::Mat& out) {
-	cv::Mat binarizada, drawing;
+	
+	cv::Mat binarizada;
 	std::vector<std::vector<cv::Point>> contorno;
 	std::vector<cv::Vec4i> hierarchy;
 
 	Filtros::rellenar(in, binarizada);
 
 	cv::findContours(binarizada, contorno, hierarchy, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
-
-	out = cv::Mat::zeros(binarizada.size(), CV_8UC3);
 
 	cv::RNG rng(12345);
 
@@ -196,9 +195,9 @@ void Filtros::recorte(cv::Mat& in, cv::Mat& out) {
 
 	std::sort(orden.begin(), orden.end(), Filtros::compare1);
 
-	cv::RotatedRect rr = cv::minAreaRect(contorno[orden[0].first]);
-	cv::OutputArray out_array;
-	cv::boxPoints(rr, out_array);
-	
+	cv::Rect r = cv::boundingRect(contorno[orden[0].first]);
 
+	out = in(r);
+
+	return;
 }

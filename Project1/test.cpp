@@ -86,9 +86,9 @@ int main(int argc, char** argv) {
 	Samples samples(input, 7, 8);
 
 	//Introducir el filtro
-	samples.setFiltro(Filtros::contorno);
+	samples.setFiltro(Filtros::recorte);
 
-	cv::imshow("imagen", samples.getSample(6, 6));
+	cv::imshow("imagen", samples.getSample(1, 6));
 
 	cv::waitKey(0); // Wait for a keystroke in the window
 
