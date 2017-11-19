@@ -20,7 +20,7 @@ public:
 	cv::Mat getSample(int, int);
 	cv::Mat getEntrenamiento(int);
 	cv::Mat getTest();
-	void setFiltro(void(*)(cv::Mat &, cv::Mat &));
+	void setFiltro(void(*funcion)(cv::Mat &, cv::Mat &));
 };
 
 class OverloadSamples : public std::exception {

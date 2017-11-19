@@ -12,7 +12,7 @@
 
 using namespace std;
 
-int main(int argc, char** argv) {
+int main2(int argc, char** argv) {
 	
 	//Configuraciones
 	omp_set_num_threads(4);
@@ -30,14 +30,13 @@ int main(int argc, char** argv) {
 		return -2;
 	}
 
-	//Filtrar y tratar a imagen
-	cout << "Filtrando imagen." << endl;
-	cv::Mat filtrada;
-	Filtros::filtroCompleto(input, filtrada);
 
 	//Obtener y dividir la imagen
 	cout << "Obtener conjuntos de prueba." << endl;
-	Samples samples(filtrada, 7, 8);
+	Samples samples(input, 7, 8);
+	
+	//Introducir el filtro
+	samples.setFiltro(Filtros::filtroCompleto);
 	
 	//Datos de entrenamiento
 	cv::Mat train_samples = samples.getEntrenamiento();
@@ -50,8 +49,6 @@ int main(int argc, char** argv) {
 	cv::Mat test_labels(train_samples.rows, 1, CV_32FC1);
 	for (int i = 0; i < test_samples.rows; i++)
 		test_labels.row(i) = cv::Scalar(i / 7);
-
-	//Extraer Caracteristicas
 
 	// Algoritmo de entrenamiento
 	cv::Ptr<cv::ml::KNearest> knn = cv::ml::KNearest::create();
@@ -66,7 +63,39 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-int main2(int argc, char** argv) {
+int main(int argc, char** argv) {
+	//Configuraciones
+	omp_set_num_threads(4);
+
+	//Verificar los argumentos
+	if (argc != 2) {
+		cout << " Usage: display_image ImageToLoadAndDisplay" << endl;
+		return -1;
+	}
+	//Leer la imagen 
+	cv::Mat input = cv::imread(argv[1], cv::IMREAD_GRAYSCALE);
+
+	if (!input.data) { // Check for invalid input
+		cout << "no se pudo abrir o encontrar la imagen." << std::endl;
+		return -2;
+	}
+
+
+	//Obtener y dividir la imagen
+	cout << "Obtener conjuntos de prueba." << endl;
+	Samples samples(input, 7, 8);
+
+	//Introducir el filtro
+	samples.setFiltro(Filtros::contorno);
+
+	cv::imshow("imagen", samples.getSample(6, 6));
+
+	cv::waitKey(0); // Wait for a keystroke in the window
+
+	return 0;
+}
+
+int main3(int argc, char** argv) {
 
 	if (argc != 2)
 	{
@@ -84,15 +113,14 @@ int main2(int argc, char** argv) {
 
 	Samples samples(input, 7, 8);
 
-	cv::imshow("ejemplo", samples.getSample(5,0));
+	samples.setFiltro(Filtros::filtroCompleto);
 
-	cv::Mat img_filtrada;
-	Filtros::filtroCompleto(samples.getSample(5,0), img_filtrada);
+	cv::imshow("ejemplo", samples.getSample(5,0));
 
 	// Puntos de interes
 	cv::Mat harris_corners, harris_normalised;
-	harris_corners = cv::Mat::zeros(img_filtrada.size(), CV_32FC1);
-	cv::cornerHarris(img_filtrada, harris_corners, 2, 3, 0.04);
+	harris_corners = cv::Mat::zeros(samples.getSample(5,0).size(), CV_32FC1);
+	cv::cornerHarris(samples.getSample(5, 0), harris_corners, 2, 3, 0.04);
 	cv::normalize(harris_corners, harris_normalised, 0, 255, cv::NORM_MINMAX, CV_32FC1, cv::Mat());
 
 	float threshold = 150.0;
@@ -118,7 +146,7 @@ int main2(int argc, char** argv) {
 
 	cv::Ptr<cv::Feature2D> orb_descriptor = cv::ORB::create();
 	cv::Mat descriptors;
-	orb_descriptor->compute(img_filtrada, keypoints, descriptors);
+	orb_descriptor->compute(samples.getSample(5, 0), keypoints, descriptors);
 
 	// We will still need to fill those once we compare everything, by using the code snippets above
 	vector<cv::Mat> database_descriptors;
@@ -137,7 +165,7 @@ int main2(int argc, char** argv) {
 	cv::imwrite("puntos_interes.jpg", harris_c);
 
 	//cv::namedWindow("Filtros", cv::WINDOW_AUTOSIZE); // Create a window for display.
-	cv::imshow("Filtros", img_filtrada); // Show our image inside it.
+	cv::imshow("Filtros", samples.getSample(5, 0)); // Show our image inside it.
 
 	cv::waitKey(0); // Wait for a keystroke in the window
 
